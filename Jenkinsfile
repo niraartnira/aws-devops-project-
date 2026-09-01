@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     stages {
@@ -16,12 +15,28 @@ pipeline {
             }
         }
 
-        stage('Docker Compose') {
+        stage('Run Tests') {
             steps {
-                sh 'docker compose up -d'
+                sh 'docker run --rm aws-devops-backend python -c "import app; print(\"Application test successful\")"'
             }
         }
 
+        stage('Deploy') {
+            steps {
+                sh 'docker stop aws-devops-backend || true'
+                sh 'docker rm aws-devops-backend || true'
+                sh 'docker run -d --name aws-devops-backend -p 5000:5000 aws-devops-backend'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'CI/CD Pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'CI/CD Pipeline failed.'
+        }
     }
 }
-
